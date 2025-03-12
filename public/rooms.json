@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1,
+    "name": "Auditorium Utama",
+    "capacity": 300,
+    "category": "Auditorium",
+    "price": "Rp. 3.500.000",
+    "status": "REJECTED"
+  }
+]
