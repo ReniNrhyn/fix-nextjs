@@ -1,10 +1,16 @@
 [
   {
-    "no": 1,
-    "room": "Auditorium Utama",
-    "bookingDate": "13 June 2025",
-    "bookedBy": "roused",
-    "price": "Rp. 3,500,000",
-    "action": "EDIT"
+    "id": 1,
+    "room": "504",
+    "bookingDate": "26 March 2025",
+    "bookedBy": "Reni",
+    "price": "Rp. 150,000"
+  },
+  {
+    "id": 2,
+    "room": "403",
+    "bookingDate": "29 March 2025",
+    "bookedBy": "Rini",
+    "price": "Rp. 250,000"
   }
 ]

@@ -40,7 +40,7 @@ const Navbar = () => {
             </Link>
           </li>
           <li>
-            <Link href="/transaction/booking" className="hover:text-yellow-300">
+            <Link href="/bookings" className="hover:text-yellow-300">
               Bookings
             </Link>
           </li>
