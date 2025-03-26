@@ -1,54 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-interface Booking {
-  no: number;
-  room: string;
-  bookingDate: string;
-  bookedBy: string;
-  price: string;
-  action: string;
-}
-
-const BookingTable = () => {
-  const [bookings, setBookings] = useState<Booking[]>([]);
-
-  useEffect(() => {
-    fetch("/data/bookings.json")
-      .then((response) => response.json())
-      .then((data) => setBookings(data));
-  }, []);
+export default function BookingTable() {
+  const bookings = [
+    {
+      id: 1,
+      room: "Auditorium Utama",
+      date: "13 June 2025",
+      bookedBy: "rousad",
+      price: "Rp. 3.500.000",
+    },
+    {
+      id: 2,
+      room: "Auditorium Utama",
+      date: "09 March 2025",
+      bookedBy: "Deldi",
+      price: "Rp. 3.500.000",
+    },
+  ];
 
   return (
-    <div>
-      <h1>Booking Management</h1>
-      <div>
-        <input type="text" placeholder="Type for search then enter" />
-        <button>Add New</button>
-      </div>
-      <table>
+    <div className="mt-4 p-4 bg-white shadow-md rounded-md">
+      <table className="w-full border-collapse">
         <thead>
-          <tr>
-            <th>NO</th>
-            <th>ROOM</th>
-            <th>BOOKING DATE</th>
-            <th>BOOKED BY</th>
-            <th>PRICE</th>
-            <th>ACTION</th>
+          <tr className="border-b text-left">
+            <th className="p-2">NO</th>
+            <th className="p-2">ROOM</th>
+            <th className="p-2">BOOKING DATE</th>
+            <th className="p-2">BOOKED BY</th>
+            <th className="p-2">PRICE</th>
+            <th className="p-2">ACTION</th>
           </tr>
         </thead>
         <tbody>
           {bookings.map((booking, index) => (
-            <tr key={index}>
-              <td>{booking.no}</td>
-              <td>{booking.room}</td>
-              <td>{booking.bookingDate}</td>
-              <td>{booking.bookedBy}</td>
-              <td>{booking.price}</td>
-              <td>
-                <button onClick={() => alert(`Edit booking ${booking.no}`)}>
-                  {booking.action}
+            <tr key={booking.id} className="border-b">
+              <td className="p-2">{index + 1}</td>
+              <td className="p-2">{booking.room}</td>
+              <td className="p-2">{booking.date}</td>
+              <td className="p-2">{booking.bookedBy}</td>
+              <td className="p-2">{booking.price}</td>
+              <td className="p-2 flex gap-2">
+                <button className="bg-yellow-400 text-white px-3 py-1 rounded-md">
+                  EDIT
+                </button>
+                <button className="bg-red-600 text-white px-3 py-1 rounded-md">
+                  HAPUS
                 </button>
               </td>
             </tr>
@@ -57,6 +53,4 @@ const BookingTable = () => {
       </table>
     </div>
   );
-};
-
-export default BookingTable;
+}

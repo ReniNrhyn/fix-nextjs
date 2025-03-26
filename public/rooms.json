@@ -6,5 +6,23 @@
     "category": "Auditorium",
     "price": "Rp. 3.500.000",
     "status": "REJECTED"
+  },
+  {
+    "id": 2,
+    "name": "Auditorium VIP",
+    "description": "Ruangan luas dengan fasilitas audio visual lengkap",
+    "capacity": 150,
+    "category": "Auditorium",
+    "price": "Rp. 5.000.000",
+    "status": "APPROVED"
+  },
+  {
+    "id": 3,
+    "name": "Ballroom VIP",
+    "description": "Ruangan mewah untuk acara pernikahan",
+    "capacity": 200,
+    "category": "Ballroom",
+    "price": "Rp. 8.000.000",
+    "status": "REJECTED"
   }
 ]
