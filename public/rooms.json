@@ -24,5 +24,14 @@
     "category": "Ballroom",
     "price": "Rp. 8.000.000",
     "status": "REJECTED"
+  },
+  {
+    "id": 3,
+    "name": "Class",
+    "description": "Kelas untuk meeting",
+    "capacity": 100,
+    "category": "Classroom",
+    "price": "Rp. 2000000",
+    "status": "PENDING"
   }
 ]
