@@ -101,6 +101,8 @@
 //   );
 // }
 
+//
+
 "use client";
 
 import { useState } from "react";
@@ -109,12 +111,10 @@ import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [userData, setUserData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
-    username: "",
     password: "",
-    confirmPassword: "",
+    password_confirmation: "",
   });
   const [error, setError] = useState("");
   const router = useRouter();
@@ -122,23 +122,20 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (userData.password !== userData.confirmPassword) {
+    if (userData.password !== userData.password_confirmation) {
       setError("Passwords don't match!");
       return;
     }
 
     try {
-      const response = await fetch("https://dummyjson.com/users/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
-          username: userData.username,
-          password: userData.password,
-        }),
-      });
+      const response = await fetch(
+        "https://simaru.amisbudi.cloud/api/auth/register",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData),
+        }
+      );
 
       const data = await response.json();
 
@@ -177,29 +174,16 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-700 mb-2">First Name</label>
-              <input
-                type="text"
-                name="firstName"
-                value={userData.firstName}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-2">Last Name</label>
-              <input
-                type="text"
-                name="lastName"
-                value={userData.lastName}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-gray-700 mb-2">Name</label>
+            <input
+              type="text"
+              name="name"
+              value={userData.name}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              required
+            />
           </div>
 
           <div>
@@ -208,18 +192,6 @@ export default function RegisterPage() {
               type="email"
               name="email"
               value={userData.email}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 mb-2">Username</label>
-            <input
-              type="text"
-              name="username"
-              value={userData.username}
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
               required
@@ -242,8 +214,8 @@ export default function RegisterPage() {
             <label className="block text-gray-700 mb-2">Confirm Password</label>
             <input
               type="password"
-              name="confirmPassword"
-              value={userData.confirmPassword}
+              name="password_confirmation"
+              value={userData.password_confirmation}
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
               required
