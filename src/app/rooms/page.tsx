@@ -2,19 +2,18 @@
 
 import { useEffect, useState } from "react";
 
-export default function RoomsPage() {
-  const [rooms, setRooms] = useState<
-    {
-      id: number;
-      name: string;
-      description: string;
-      capacity: number;
-      category: string;
-      price: string;
-      status: string;
-    }[]
-  >([]);
+interface Room {
+  id: number;
+  name: string;
+  categoryId: number;
+  price: number;
+  capacity: number;
+  description: string;
+  status: string;
+}
 
+export default function RoomsPage() {
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
@@ -22,82 +21,143 @@ export default function RoomsPage() {
     name: "",
     description: "",
     capacity: 0,
-    category: "",
-    price: "",
+    categoryId: 0,
+    price: 0,
     status: "PENDING",
   });
+  const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  // Fetch data dari public/rooms.json saat halaman dimuat
-  useEffect(() => {
-    fetch("/rooms.json")
-      .then((res) => res.json())
-      .then((data) => setRooms(data))
-      .catch((error) => console.error("Error fetching rooms:", error));
-  }, []);
+  const accessToken =
+    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
-  const handleApprove = (id: number) => {
-    setRooms((prevRooms) =>
-      prevRooms.map((room) =>
-        room.id === id ? { ...room, status: "APPROVED" } : room
-      )
-    );
-  };
-
-  const handleReject = (id: number) => {
-    setRooms((prevRooms) =>
-      prevRooms.map((room) =>
-        room.id === id ? { ...room, status: "REJECTED" } : room
-      )
-    );
-  };
-
-  const handleEdit = (id: number) => {
-    const roomToEdit = rooms.find((room) => room.id === id);
-    if (roomToEdit) {
-      // Hapus "Rp. " dari harga dan titik pemisah ribuan
-      const rawPrice = roomToEdit.price.replace("Rp. ", "").replace(/\./g, "");
-      setNewRoom({
-        ...roomToEdit,
-        price: rawPrice,
+  const fetchRooms = async () => {
+    try {
+      const response = await fetch("https://simaru.amisbudi.cloud/api/rooms", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
-      setEditingRoomId(id);
-      setIsEditModalOpen(true);
+      const { data } = await response.json();
+      if (data) {
+        setRooms(data);
+      }
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
     }
   };
 
-  const handleUpdate = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("https://simaru.amisbudi.cloud/api/rooms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(newRoom),
+      });
+
+      const { data, message } = await response.json();
+      if (data) {
+        setMessage(message);
+        setIsSuccess(true);
+        setIsModalOpen(false);
+        setTimeout(() => setIsSuccess(false), 3000);
+        fetchRooms();
+        setNewRoom({
+          name: "",
+          description: "",
+          capacity: 0,
+          categoryId: 0,
+          price: 0,
+          status: "PENDING",
+        });
+      }
+    } catch (error) {
+      console.error("Error creating room:", error);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingRoomId === null) return;
 
-    const updatedRoom = {
-      ...newRoom,
-      id: editingRoomId,
-      price: `Rp. ${newRoom.price
-        .replace(/\D/g, "")
-        .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`,
-    };
+    try {
+      const response = await fetch(
+        `https://simaru.amisbudi.cloud/api/rooms/${editingRoomId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(newRoom),
+        }
+      );
 
-    setRooms((prevRooms) =>
-      prevRooms.map((room) => (room.id === editingRoomId ? updatedRoom : room))
-    );
-
-    // Reset form dan tutup modal
-    setIsEditModalOpen(false);
-    setEditingRoomId(null);
-    setNewRoom({
-      name: "",
-      description: "",
-      capacity: 0,
-      category: "",
-      price: "",
-      status: "PENDING",
-    });
+      const { data, message } = await response.json();
+      if (data) {
+        setMessage(message);
+        setIsSuccess(true);
+        setIsEditModalOpen(false);
+        setTimeout(() => setIsSuccess(false), 3000);
+        fetchRooms();
+        setNewRoom({
+          name: "",
+          description: "",
+          capacity: 0,
+          categoryId: 0,
+          price: 0,
+          status: "PENDING",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating room:", error);
+    }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this room?")) {
-      setRooms((prevRooms) => prevRooms.filter((room) => room.id !== id));
+      try {
+        const response = await fetch(
+          `https://simaru.amisbudi.cloud/api/rooms/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          fetchRooms();
+        }
+      } catch (error) {
+        console.error("Error deleting room:", error);
+      }
     }
+  };
+
+  const handleEdit = (room: Room) => {
+    setNewRoom({
+      name: room.name,
+      description: room.description,
+      capacity: room.capacity,
+      categoryId: room.categoryId,
+      price: room.price,
+      status: room.status,
+    });
+    setEditingRoomId(room.id);
+    setIsEditModalOpen(true);
   };
 
   const handleInputChange = (
@@ -106,38 +166,94 @@ export default function RoomsPage() {
     const { name, value } = e.target;
     setNewRoom((prev) => ({
       ...prev,
-      [name]: name === "capacity" ? parseInt(value) || 0 : value,
+      [name]:
+        name === "capacity" || name === "categoryId" || name === "price"
+          ? parseInt(value) || 0
+          : value,
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newId =
-      rooms.length > 0 ? Math.max(...rooms.map((r) => r.id)) + 1 : 1;
+  const handleStatusChange = async (id: number, newStatus: string) => {
+    try {
+      const roomToUpdate = rooms.find((room) => room.id === id);
+      if (!roomToUpdate) return;
 
-    const roomToAdd = {
-      ...newRoom,
-      id: newId,
-      price: `Rp. ${newRoom.price
-        .replace(/\D/g, "")
-        .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`,
-    };
+      const updatedRoom = { ...roomToUpdate, status: newStatus };
 
-    setRooms((prev) => [...prev, roomToAdd]);
-    setIsModalOpen(false);
-    setNewRoom({
-      name: "",
-      description: "",
-      capacity: 0,
-      category: "",
-      price: "",
-      status: "PENDING",
-    });
+      const response = await fetch(
+        `https://simaru.amisbudi.cloud/api/rooms/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(updatedRoom),
+        }
+      );
+
+      if (response.ok) {
+        fetchRooms();
+      }
+    } catch (error) {
+      console.error("Error updating room status:", error);
+    }
   };
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Room Management</h1>
+
+      {isSuccess && (
+        <div className="mb-4 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
+          <div className="flex items-start gap-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="size-6 text-green-600"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+
+            <div className="flex-1">
+              <strong className="font-medium text-gray-900">{message}</strong>
+              <p className="mt-0.5 text-sm text-gray-700">
+                Your data {newRoom.name} have been saved.
+              </p>
+            </div>
+
+            <button
+              className="-m-3 rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+              type="button"
+              onClick={() => setIsSuccess(false)}
+              aria-label="Dismiss alert"
+            >
+              <span className="sr-only">Dismiss popup</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="size-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="p-6 bg-white shadow-md rounded-lg">
         <div className="mb-4 flex justify-between items-center">
@@ -208,7 +324,7 @@ export default function RoomsPage() {
                       Price
                     </label>
                     <input
-                      type="text"
+                      type="number"
                       name="price"
                       value={newRoom.price}
                       onChange={handleInputChange}
@@ -219,20 +335,32 @@ export default function RoomsPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Category
+                      Category ID
+                    </label>
+                    <input
+                      type="number"
+                      name="categoryId"
+                      value={newRoom.categoryId}
+                      onChange={handleInputChange}
+                      className="w-full border p-2 rounded-md mt-1"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Status
                     </label>
                     <select
-                      name="category"
-                      value={newRoom.category}
+                      name="status"
+                      value={newRoom.status}
                       onChange={handleInputChange}
                       className="w-full border p-2 rounded-md mt-1"
                       required
                     >
-                      <option value="">Choose a Category</option>
-                      <option value="Auditorium">Auditorium</option>
-                      <option value="Meeting Room">Meeting Room</option>
-                      <option value="Classroom">Classroom</option>
-                      <option value="Ballroom">Ballroom</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="REJECTED">Rejected</option>
                     </select>
                   </div>
                 </div>
@@ -311,7 +439,7 @@ export default function RoomsPage() {
                       Price
                     </label>
                     <input
-                      type="text"
+                      type="number"
                       name="price"
                       value={newRoom.price}
                       onChange={handleInputChange}
@@ -322,21 +450,16 @@ export default function RoomsPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Category
+                      Category ID
                     </label>
-                    <select
-                      name="category"
-                      value={newRoom.category}
+                    <input
+                      type="number"
+                      name="categoryId"
+                      value={newRoom.categoryId}
                       onChange={handleInputChange}
                       className="w-full border p-2 rounded-md mt-1"
                       required
-                    >
-                      <option value="">Choose a Category</option>
-                      <option value="Auditorium">Auditorium</option>
-                      <option value="Meeting Room">Meeting Room</option>
-                      <option value="Classroom">Classroom</option>
-                      <option value="Ballroom">Ballroom</option>
-                    </select>
+                    />
                   </div>
 
                   <div>
@@ -367,8 +490,8 @@ export default function RoomsPage() {
                         name: "",
                         description: "",
                         capacity: 0,
-                        category: "",
-                        price: "",
+                        categoryId: 0,
+                        price: 0,
                         status: "PENDING",
                       });
                     }}
@@ -394,7 +517,7 @@ export default function RoomsPage() {
               <th className="border p-2">NO</th>
               <th className="border p-2">NAME</th>
               <th className="border p-2">CAPACITY</th>
-              <th className="border p-2">CATEGORY</th>
+              <th className="border p-2">CATEGORY ID</th>
               <th className="border p-2">PRICE</th>
               <th className="border p-2">STATUS</th>
               <th className="border p-2">ACTION</th>
@@ -406,7 +529,7 @@ export default function RoomsPage() {
                 <td className="border p-2">{index + 1}</td>
                 <td className="border p-2">{room.name}</td>
                 <td className="border p-2">{room.capacity}</td>
-                <td className="border p-2">{room.category}</td>
+                <td className="border p-2">{room.categoryId}</td>
                 <td className="border p-2">{room.price}</td>
                 <td
                   className={`border p-2 ${
@@ -421,19 +544,19 @@ export default function RoomsPage() {
                 </td>
                 <td className="border p-2 flex justify-center gap-2">
                   <button
-                    onClick={() => handleApprove(room.id)}
+                    onClick={() => handleStatusChange(room.id, "APPROVED")}
                     className="bg-blue-500 text-white px-3 py-1 rounded-md"
                   >
                     Approve
                   </button>
                   <button
-                    onClick={() => handleReject(room.id)}
+                    onClick={() => handleStatusChange(room.id, "REJECTED")}
                     className="bg-orange-500 text-white px-3 py-1 rounded-md"
                   >
                     Reject
                   </button>
                   <button
-                    onClick={() => handleEdit(room.id)}
+                    onClick={() => handleEdit(room)}
                     className="bg-yellow-500 text-white px-3 py-1 rounded-md"
                   >
                     Edit
